@@ -17,7 +17,7 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
 */
 @start_plan
 +!start : true <-
-	.print("Hello world").
+	.print("Hello world!").
 
 /* 
  * Plan for reacting to the addition of the belief organization_deployed(OrgName)
