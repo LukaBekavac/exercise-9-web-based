@@ -22,6 +22,16 @@
     <-
       .print("Reading the temperature");
       .print("Read temperature (Celcious): ", -2);
+      .my_name(N);
+      .broadcast(tell, witness_reputation(N, sensing_agent_1, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_2, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_3, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_4, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_5, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_6, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_7, "Don't trust", -1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_8, "Trust", 1));
+      .broadcast(tell, witness_reputation(N, sensing_agent_9, "Trust", 1));
       .broadcast(tell, temperature(-2))}).
 
 /* Import behavior of sensing agent */

@@ -22,7 +22,7 @@ i_have_plans_for(R) :- not (role_goal(R,G) & not has_plan_for(G)).
 */
 @start_plan
 +!start : true <-
-	.print("Hello world").
+    .print("Hello world").
 
 /* 
  * Plan for reacting to the addition of the goal !read_temperature
@@ -32,10 +32,20 @@ i_have_plans_for(R) :- not (role_goal(R,G) & not has_plan_for(G)).
 */
 @read_temperature_plan
 +!read_temperature : true <-
-	.print("Reading the temperature");
-	readCurrentTemperature(47.42, 9.37, Celcius); // reads the current temperature using the artifact
-	.print("Read temperature (Celcius): ", Celcius);
-	.broadcast(tell, temperature(Celcius)). // broadcasts the temperature reading
+    .print("Reading the temperature");
+    .my_name(N);
+	.broadcast(tell, witness_reputation(N, sensing_agent_1, "trust", +1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_2, "trust", +1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_3, "Don't trust", -1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_4, "Don't trust", -1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_5, "Don't trust", -1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_6, "Don't trust", -1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_7, "Don't trust", -1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_8, "Don't trust", -1));
+    .broadcast(tell, witness_reputation(N, sensing_agent_9, "Don't trust", -1));
+    readCurrentTemperature(43.50, 16.44, Celcius); // reads the current temperature in Split using the artifact
+    .print("Read temperature (Celcius): ", Celcius);
+    .broadcast(tell, temperature(Celcius)). // broadcasts the temperature reading
 
 /* 
  * Plan for reacting to the addition of the belief organization_deployed(OrgName)
@@ -45,17 +55,17 @@ i_have_plans_for(R) :- not (role_goal(R,G) & not has_plan_for(G)).
 */
 @organization_deployed_plan
 +organization_deployed(OrgName) : true <- 
-	.print("Notified about organization deployment of ", OrgName);
+    .print("Notified about organization deployment of ", OrgName);
 
-	// joins the workspace
-	joinWorkspace(OrgName, _);
+    // joins the workspace
+    joinWorkspace(OrgName, _);
 
-	// looks up for, and focuses on the OrgArtifact that represents the organization
-	lookupArtifact(OrgName, OrgId);
-	focus(OrgId);
+    // looks up for, and focuses on the OrgArtifact that represents the organization
+    lookupArtifact(OrgName, OrgId);
+    focus(OrgId);
 
-	// creates the goal for adopting relevant roles
-	!adopt_relevant_roles.
+    // creates the goal for adopting relevant roles
+    !adopt_relevant_roles.
 
 /* 
  * Plan for reacting to the addition of goal !adopt_relevant_roles
@@ -66,13 +76,13 @@ i_have_plans_for(R) :- not (role_goal(R,G) & not has_plan_for(G)).
 @adopt_relevant_roles_plan
 +!adopt_relevant_roles : true <-
 
-	// finds all relevant roles
-	.findall(Role, role(Role, Super) & i_have_plans_for(Role), RelevantRoles);
-	.print("Inferred that I have plans for the roles: ", RelevantRoles);
+    // finds all relevant roles
+    .findall(Role, role(Role, Super) & i_have_plans_for(Role), RelevantRoles);
+    .print("Inferred that I have plans for the roles: ", RelevantRoles);
 
-	// adopts each role in the list RelevantRoles (could have also been implemented recursively)
-	for (.member(Role, RelevantRoles)) {
-		.print("Adopting the role of ", Role);
+    // adopts each role in the list RelevantRoles (could have also been implemented recursively)
+    for (.member(Role, RelevantRoles)) {
+        .print("Adopting the role of ", Role);
         adoptRole(Role);
     }.
 
@@ -83,7 +93,7 @@ i_have_plans_for(R) :- not (role_goal(R,G) & not has_plan_for(G)).
  * Body: prints new certified reputation rating (relevant from Task 3 and on)
 */
 +certified_reputation(CertificationAgent, SourceAgent, MessageContent, CRRating): true <-
-	.print("Certified Reputation Rating: (", CertificationAgent, ", ", SourceAgent, ", ", MessageContent, ", ", CRRating, ")").
+    .print("Certified Reputation Rating: (", CertificationAgent, ", ", SourceAgent, ", ", MessageContent, ", ", CRRating, ")").
 
 /* Import behavior of agents that work in CArtAgO environments */
 { include("$jacamoJar/templates/common-cartago.asl") }

@@ -1,6 +1,7 @@
 // acting agent
 
 /* Initial beliefs and rules */
+degrees(Celcius) :- temperature(Celcius)[source(Agent)] & p(Value,Agent).
 
 // The agent has a belief about the location of the W3C Web of Thing (WoT) Thing Description (TD)
 // that describes a Thing of type https://ci.mines-stetienne.fr/kg/ontology#PhantomX
@@ -17,6 +18,7 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
 */
 @start_plan
 +!start : true <-
+	.broadcast(askOne,certified_reputation(CertificationAgent, SourceAgent, MessageContent, CRRating) );
 	.print("Hello world!").
 
 /* 
@@ -84,6 +86,33 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
 +!select_reading(TempReadings, Celcius) : true <-
     .nth(0, TempReadings, Celcius).
 
+@select_reading_task_0_plan2
++!select_reading_highest_trust(TempReadings, Celcius) : true <-
+	// Find all agents that have some trust level
+    .findall(Agent, interaction_trust(_, Agent, _, _), Agents);
+	
+	// Iterate over each agent
+	// For task1_2 use !iterate1
+	!iterate2(Agents);
+	
+	// For each agent, find their trust level
+	.findall(p(Value, Agent), trust_level(Value, Agent), Result);
+	
+	// Find the maximum trust level
+	.max(Result, Max);
+	
+	.print("Max: ", Max);
+	
+	// Add the maximum trust level to the belief base
+	+Max;
+	
+	// Check if Celcius is a degree
+	?degrees(Celcius);
+	
+	// Print the degree in Celsius
+	.print("Trusted degree: ", Celcius).
+
+
 /* 
  * Plan for reacting to the addition of the goal !manifest_temperature
  * Triggering event: addition of goal !manifest_temperature
@@ -101,13 +130,16 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
 	.print("Temperature readings to evaluate:", TempReadings);
 
 	// creates goal to select one broadcasted reading to manifest
-	!select_reading(TempReadings, Celcius);
+	//!select_reading(TempReadings, Celcius);
+
+	// creates goal to select highest trusted broadcasted reading to manifest
+	!select_reading_highest_trust(TempReadings, Celcius);
 
 	// manifests the selected reading stored in the variable Celcius
 	.print("Manifesting temperature (Celcius): ", Celcius);
 	convert(Celcius, -20.00, 20.00, 200.00, 830.00, Degrees)[artifact_id(ConverterId)]; // converts Celcius to binary degress based on the input scale
 	.print("Manifesting temperature (moving robotic arm to): ", Degrees);
-
+	
 	/* 
 	 * If you want to test with the real robotic arm, 
 	 * follow the instructions here: https://github.com/HSG-WAS-SS23/exercise-8/blob/main/README.md#test-with-the-real-phantomx-reactor-robot-arm
@@ -120,6 +152,52 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
 
 	// invokes the action onto:SetWristAngle for manifesting the temperature with the wrist of the robotic arm
 	invokeAction("https://ci.mines-stetienne.fr/kg/ontology#SetWristAngle", ["https://www.w3.org/2019/wot/json-schema#IntegerSchema"], [Degrees])[artifact_id(leubot1)].
+
++!iterate1(Agents) : Agents \== [] <-  // If Agents list is not empty
+    .nth(0, Agents, Agent0);  // Get the first agent in the list
+    .findall(T, interaction_trust(_,Agent0,_,T), LT);  // Find all trust values for Agent0
+    .length(LT, LengthLt);  // Get the length of the trust values list
+    !sum(LT, SumLt);  // Calculate the sum of the trust values list
+    AvgTrust = SumLt / LengthLt;  // Calculate the average trust value
+    +trust_level(AvgTrust, Agent0);  // Add the average trust value to the agent's beliefs
+    .delete(Agent0, Agents, NewAgents);  // Delete the first agent from the list
+    !iterate2(NewAgents).  // Repeat the process with the remaining agents
+
++!iterate1(Agents) : true <-  // If Agents list is empty
+    .print("done").  // Print "done"
+
++!iterate2(Agents) : Agents \== [] <-  // If Agents list is not empty
+    .nth(0, Agents, Agent0);  // Get the first agent in the list
+    .findall(T, interaction_trust(_,Agent0,_,T), LT);  // Find all trust values for Agent0
+    .findall(W, witness_reputation(_,Agent0,_,W), LW);  // Find all witness reputation values for Agent0
+    .length(LT, LengthLt);  // Get the length of the trust values list
+    .length(LW, LengthLw);  // Get the length of the witness reputation list
+    !sum(LW, SumLw);  // Calculate the sum of the witness reputation list
+    !sum(LT, SumLt);  // Calculate the sum of the trust values list
+    .findall(C, certified_reputation(_,Agent0,_,C), LC);  // Find all certified reputation values for Agent0
+    !sum(LC, SumLc);  // Calculate the sum of the certified reputation list
+    .length(LC, LengthLc);  // Get the length of the certified reputation list
+    //AvgList = ((SumLt / LengthLt) / 2) + (SumLc / LengthLc) / 2;  // Calculate the average trust value task 3
+	AvgList = ((SumLt / LengthLt) / 3) + (SumLc / LengthLc) / 3 + ((SumLw / LengthLw) / 3);  // Calculate the average trust value
+    +trust_level(AvgList, Agent0);  // Add the average trust value to the agent's beliefs
+    .delete(Agent0, Agents, NewAgents);  // Delete the first agent from the list
+    !iterate2(NewAgents).  // Repeat the process with the remaining agents
+
++!iterate2(Agents) : true <-  // If Agents list is empty
+    .print("done").  // Print "done"
+
+// Define a plan to calculate the sum of a list
++!sum(List, Result) : true
+  <- !calculate_sum(List, 0, Result).
+
+// Recursive plan to calculate the sum
++!calculate_sum([], Accumulator, Accumulator) : true.
+
++!calculate_sum([Head|Tail], Accumulator, Result) : true
+  <- NewAccumulator = Accumulator + Head;
+     !calculate_sum(Tail, NewAccumulator, Result).
+
+
 
 /* Import behavior of agents that work in CArtAgO environments */
 { include("$jacamoJar/templates/common-cartago.asl") }
