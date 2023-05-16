@@ -161,7 +161,7 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
     AvgTrust = SumLt / LengthLt;  // Calculate the average trust value
     +trust_level(AvgTrust, Agent0);  // Add the average trust value to the agent's beliefs
     .delete(Agent0, Agents, NewAgents);  // Delete the first agent from the list
-    !iterate2(NewAgents).  // Repeat the process with the remaining agents
+    !iterate1(NewAgents).  // Repeat the process with the remaining agents
 
 +!iterate1(Agents) : true <-  // If Agents list is empty
     .print("done").  // Print "done"
